@@ -1,0 +1,27 @@
+Windows Registry Editor Version 5.00
+
+; Example registry row for the template provider (64-bit view).
+; An installer writes the same values; scripts\register-dev.bat writes them on a dev box.
+; Order matters for an installer: Version is written LAST (the "row complete" marker
+; the service re-describes on). Importing this file is a dev convenience only.
+;
+; Settings\<KEY> is read by the provider through host->get_setting(); the environment
+; variable DXR_CONV_EXAMPLE_CONVERSION_<KEY> in the service's environment overrides it.
+;
+;   RAMP_DIRECTION  vertical | horizontal       (default vertical)
+;   WARM_MS         simulated warm-up in ms      (default 0)
+;   DEPENDENCY      present | absent | too-old   (default present; shows ABSENT / FAILED(VERSION))
+;   ENABLE          0 makes probe() decline       (default 1)
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\DisplayXR\ConversionProviders\example-conversion]
+"Binary"="C:\\Program Files\\DisplayXR\\Plugins\\Example\\DisplayXR-ExampleConversion.dll"
+"DisplayName"="Example Conversion Provider (template)"
+"Vendor"="Example"
+"ProbeOrder"=dword:00000032
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\DisplayXR\ConversionProviders\example-conversion\Settings]
+"RAMP_DIRECTION"="vertical"
+"WARM_MS"="500"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\DisplayXR\ConversionProviders\example-conversion]
+"Version"="0.1.0"

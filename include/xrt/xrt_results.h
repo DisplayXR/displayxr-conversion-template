@@ -1,0 +1,358 @@
+// Copyright 2020-2023, Collabora, Ltd.
+// Copyright 2024-2025, NVIDIA CORPORATION.
+// SPDX-License-Identifier: BSL-1.0
+/*!
+ * @file
+ * @brief  Internal result type for XRT.
+ * @author Christoph Haag <christoph.haag@collabora.com>
+ * @ingroup xrt_iface
+ */
+
+#pragma once
+
+/*!
+ * Result type used across Monado.
+ *
+ * 0 is @ref XRT_SUCCESS, positive values are "special" non-error return codes (like timeout), negative values are
+ * errors.
+ *
+ * @see u_pp_xrt_result
+ * @ingroup xrt_iface
+ */
+typedef enum xrt_result
+{
+	/*!
+	 * The operation succeeded
+	 */
+	XRT_SUCCESS = 0,
+
+	/*!
+	 * The operation was given a timeout and timed out.
+	 *
+	 * The value 2 picked so it matches VK_TIMEOUT.
+	 */
+	XRT_TIMEOUT = 2,
+
+	/*!
+	 * The space’s bounds are not known at the moment.
+	 */
+	XRT_SPACE_BOUNDS_UNAVAILABLE = 3,
+
+	/*!
+	 * A problem occurred either with the IPC transport itself, with invalid commands from the client, or with
+	 * invalid responses from the server.
+	 */
+	XRT_ERROR_IPC_FAILURE = -1,
+
+	/*!
+	 * Returned when trying to acquire or release an image and there is no image left to acquire/no space in the
+	 * queue left to release to
+	 */
+	XRT_ERROR_NO_IMAGE_AVAILABLE = -2,
+
+	/*!
+	 * Other unspecified error related to Vulkan
+	 */
+	XRT_ERROR_VULKAN = -3,
+
+	/*!
+	 * Other unspecified error related to OpenGL
+	 */
+	XRT_ERROR_OPENGL = -4,
+
+	/*!
+	 * The function tried to submit Vulkan commands but received an error.
+	 */
+	XRT_ERROR_FAILED_TO_SUBMIT_VULKAN_COMMANDS = -5,
+
+	/*!
+	 *
+	 * Returned when a swapchain create flag is passed that is valid, but
+	 * not supported by the main compositor (and lack of support is also
+	 * valid).
+	 *
+	 * For use when e.g. the protected content image flag is requested but
+	 * isn't supported.
+	 */
+	XRT_ERROR_SWAPCHAIN_FLAG_VALID_BUT_UNSUPPORTED = -6,
+
+	/*!
+	 * Could not allocate native image buffer(s).
+	 */
+	XRT_ERROR_ALLOCATION = -7,
+
+	/*!
+	 * The pose is no longer active, this happens when the application
+	 * tries to get a pose that is no longer active.
+	 */
+	XRT_ERROR_POSE_NOT_ACTIVE = -8,
+
+	/*!
+	 * Creating a fence failed.
+	 */
+	XRT_ERROR_FENCE_CREATE_FAILED = -9,
+
+	/*!
+	 * Getting or giving the native fence handle caused a error.
+	 */
+	XRT_ERROR_NATIVE_HANDLE_FENCE_ERROR = -10,
+
+	/*!
+	 * Multiple not supported on this layer level (IPC, compositor).
+	 */
+	XRT_ERROR_MULTI_SESSION_NOT_IMPLEMENTED = -11,
+
+	/*!
+	 * The requested format is not supported by Monado.
+	 */
+	XRT_ERROR_SWAPCHAIN_FORMAT_UNSUPPORTED = -12,
+
+	/*!
+	 * The given config was EGL_NO_CONFIG_KHR and EGL_KHR_no_config_context
+	 * is not supported by the display.
+	 */
+	XRT_ERROR_EGL_CONFIG_MISSING = -13,
+
+	/*!
+	 * Failed to initialize threading components.
+	 */
+	XRT_ERROR_THREADING_INIT_FAILURE = -14,
+
+	/*!
+	 * The client has not created a session on this IPC connection,
+	 * which is needed for the given command.
+	 */
+	XRT_ERROR_IPC_SESSION_NOT_CREATED = -15,
+
+	/*!
+	 * The client has already created a session on this IPC connection.
+	 */
+	XRT_ERROR_IPC_SESSION_ALREADY_CREATED = -16,
+	/*!
+	 * The prober list has not been locked before this call.
+	 */
+	XRT_ERROR_PROBER_NOT_SUPPORTED = -17,
+	/*!
+	 * Creating the @ref xrt_prober failed.
+	 */
+	XRT_ERROR_PROBER_CREATION_FAILED = -18,
+	/*!
+	 * The prober list is locked (already).
+	 */
+	XRT_ERROR_PROBER_LIST_LOCKED = -19,
+	/*!
+	 * The prober list has not been locked before this call.
+	 */
+	XRT_ERROR_PROBER_LIST_NOT_LOCKED = -20,
+	/*!
+	 * The probring failed.
+	 */
+	XRT_ERROR_PROBING_FAILED = -21,
+	/*!
+	 * Creating a @ref xrt_device failed.
+	 */
+	XRT_ERROR_DEVICE_CREATION_FAILED = -22,
+	/*!
+	 * Some D3D error, from code shared between D3D11 and D3D12
+	 */
+	XRT_ERROR_D3D = -23,
+	/*!
+	 * Some D3D11 error
+	 */
+	XRT_ERROR_D3D11 = -24,
+	/*!
+	 * Some D3D12 error
+	 */
+	XRT_ERROR_D3D12 = -25,
+	/*!
+	 * The @ref xrt_space_overseer doesn't support recentering driven from
+	 * the application side of things.
+	 */
+	XRT_ERROR_RECENTERING_NOT_SUPPORTED = -26,
+	/*!
+	 * The system doesn't support compositor, this error can be returned
+	 * when trying to create the system compositor or trying to create the
+	 * native compositor.
+	 */
+	XRT_ERROR_COMPOSITOR_NOT_SUPPORTED = -27,
+	/*!
+	 * The client has not created a compositor on this IPC connection,
+	 * which is needed for the given command.
+	 */
+	XRT_ERROR_IPC_COMPOSITOR_NOT_CREATED = -28,
+
+	/*!
+	 * The interface function called is not implemented by its interface.
+	 */
+	XRT_ERROR_NOT_IMPLEMENTED = -29,
+
+	/*!
+	 * The supplied space type is not supported for this operation.
+	 */
+	XRT_ERROR_UNSUPPORTED_SPACE_TYPE = -30,
+
+	/*!
+	 * Some other Android error, typically a logic error that should be impossible to reach.
+	 */
+	XRT_ERROR_ANDROID = -31,
+
+	/*!
+	 * Returned when a feature is not supported by the device.
+	 */
+	XRT_ERROR_FEATURE_NOT_SUPPORTED = -32,
+
+	/*!
+	 * The input provided is a valid value from the enum xrt_input_name but is not supported by the driver.
+	 */
+	XRT_ERROR_INPUT_UNSUPPORTED = -33,
+
+	/*!
+	 * The output provided is a valid value from the enum xrt_output_name but is not supported by the driver.
+	 */
+	XRT_ERROR_OUTPUT_UNSUPPORTED = -34,
+
+	/*!
+	 * The requested operation failed, verify the log to know more.
+	 */
+	XRT_ERROR_OUTPUT_REQUEST_FAILURE = -35,
+
+	/*!
+	 * Failed to create a sync primitive like mutex.
+	 */
+	XRT_ERROR_SYNC_PRIMITIVE_CREATION_FAILED = -36,
+
+	/*!
+	 * The IPC server detected that a service was already running and
+	 * couldn't start because of that.
+	 */
+	XRT_ERROR_IPC_SERVICE_ALREADY_RUNNING = -37,
+
+	/*!
+	 * The IPC server couldn't starts it mainloop.
+	 */
+	XRT_ERROR_IPC_MAINLOOP_FAILED_TO_INIT = -38,
+
+	/*!
+	 * The caller is not authorized to perform the requested operation. Used
+	 * for IPC requests like `workspace_activate` that are only valid for the
+	 * orchestrator-spawned workspace controller.
+	 */
+	XRT_ERROR_NOT_AUTHORIZED = -39,
+
+	/*!
+	 * #960: the service refused the connection because the client's class
+	 * quota (or the runtime-admitted client cap) is exhausted. The state
+	 * tracker maps this to XR_ERROR_LIMIT_REACHED from xrCreateInstance.
+	 */
+	XRT_ERROR_CLIENT_LIMIT_REACHED = -40,
+
+	/*!
+	 * #999: the user closed the RUNTIME-OWNED window (ESC / the X button /
+	 * Alt+F4) of an in-process native-compositor session. This is a request
+	 * to exit, NOT a failure: the session, instance and compositor are all
+	 * still alive and every other entry point must keep working, because the
+	 * app still has to be told to leave (xrPollEvent → STOPPING) and still
+	 * has to run xrEndSession + xrDestroySession for the compositor to tear
+	 * the display processor down before the HWND dies.
+	 *
+	 * Only @ref xrt_compositor::wait_frame returns it, and only the state
+	 * tracker consumes it: it arms the same graceful exit the out-of-process
+	 * path gets from @ref XRT_SESSION_EVENT_EXIT_REQUEST (the in-process
+	 * native compositors have no session event sink to push that through) and
+	 * reports XR_ERROR_RUNTIME_FAILURE from xrWaitFrame so the app drops out
+	 * of its frame loop. Do NOT use @ref XRT_ERROR_IPC_FAILURE for this —
+	 * that one means "the session is gone", sets `has_lost` and turns every
+	 * later call, xrRequestExitSession included, into XR_ERROR_SESSION_LOST.
+	 */
+	XRT_ERROR_COMPOSITOR_WINDOW_CLOSED = -41,
+
+	/*!
+	 * browser#103: the service-side weave engine REFUSED this XR_DXR_weave
+	 * call. The connection is healthy — the request crossed the wire, the
+	 * service answered, and the answer was "not this frame".
+	 *
+	 * This exists purely to keep a transient refusal distinguishable from a
+	 * dead pipe. The canonical producer is the 4 ms input `AcquireSync`
+	 * timeout in `comp_d3d11_service_weave_submit` (the caller is still
+	 * writing the shared input): the submit is simply retried on the next
+	 * frame, and a present-owner that treated it as fatal would tear down a
+	 * perfectly good session. Bind / geometry / flat-region refusals ride the
+	 * same code for the same reason.
+	 *
+	 * Do NOT use @ref XRT_ERROR_IPC_FAILURE for this — that one means "the
+	 * transport is gone", and @ref OXR_CHECK_XRET maps it to `has_lost` +
+	 * XR_ERROR_INSTANCE_LOST, after which every later call is
+	 * XR_ERROR_SESSION_LOST. The state tracker maps THIS code to a plain
+	 * XR_ERROR_RUNTIME_FAILURE, leaving the session usable.
+	 */
+	XRT_ERROR_WEAVE_REFUSED = -42,
+
+	/*!
+	 * browser#103: the IPC client library's build-time git tag does not match
+	 * the running service's. The connection was made, the shared memory was
+	 * mapped, and the handshake was then refused because the two halves of
+	 * the runtime are from different builds — the usual cause being an
+	 * installer that upgraded the runtime under a live client.
+	 *
+	 * Split out of @ref XRT_ERROR_IPC_FAILURE so a caller that reconnects
+	 * mid-session can *classify* this: retrying at the same cadence will
+	 * never succeed, and the real remedy is "relaunch the application". It is
+	 * still not permanent — a rollback, or an installer that has finished
+	 * writing, recovers without a relaunch — so a caller should back off to a
+	 * long tail rather than switching off.
+	 *
+	 * The state tracker maps this to XR_ERROR_RUNTIME_VERSION_SKEW_DXR from
+	 * xrCreateInstance. Only the tag check produces it; `IPC_IGNORE_VERSION=1`
+	 * suppresses the check entirely and is unaffected.
+	 */
+	XRT_ERROR_IPC_VERSION_SKEW = -43,
+
+	/*!
+	 * #1380: an input-provider plug-in asked the host for the active display
+	 * processor's nominal panel/viewer geometry
+	 * (@ref xrt_input_plugin_host_iface::get_display_geometry) BEFORE the
+	 * runtime had it to give.
+	 *
+	 * Not a failure and not "unsupported": the callback itself is valid for
+	 * the life of the process from `xrtInputPluginNegotiate` on, but the
+	 * geometry is only cached once the display plug-in has answered — which
+	 * happens after negotiation and before any provider's `create_devices`
+	 * call. A provider that asks during negotiate gets this; the same call
+	 * from `create_devices` on succeeds. The out struct is left UNTOUCHED,
+	 * so a caller may simply retry later.
+	 *
+	 * Kept distinct from @ref XRT_ERROR_FEATURE_NOT_SUPPORTED (which would
+	 * mean "this runtime never has geometry") precisely so a provider can
+	 * tell "too early" from "never".
+	 */
+	XRT_ERROR_INPUT_HOST_GEOMETRY_NOT_READY = -44,
+
+	/*!
+	 * XR_DXR_stereo_camera (ADR-043 R3): the user, or the stored per-app
+	 * decision, refused this executable the camera. Retryable after consent.
+	 * Maps to XR_ERROR_STEREO_CAMERA_CONSENT_REFUSED_DXR; distinct from
+	 * @ref XRT_ERROR_NOT_AUTHORIZED, which stays the OS-switch / class refusal
+	 * (XR_ERROR_PERMISSION_INSUFFICIENT).
+	 */
+	XRT_ERROR_STEREO_CAMERA_CONSENT_REFUSED = -45,
+
+	/*!
+	 * XR_DXR_stereo_camera: camera sharing is switched off (user toggle or
+	 * kill switch). Maps to XR_ERROR_STEREO_CAMERA_DISABLED_DXR.
+	 */
+	XRT_ERROR_STEREO_CAMERA_DISABLED = -46,
+
+	/*!
+	 * XR_DXR_stereo_camera: the source cannot be opened right now (the
+	 * plug-in reported it unavailable and the retry is pending). Maps to
+	 * XR_ERROR_STEREO_CAMERA_BUSY_DXR.
+	 */
+	XRT_ERROR_STEREO_CAMERA_BUSY = -47,
+
+	/*!
+	 * XR_DXR_stereo_camera: the service ended this stream (user stop,
+	 * sharing off, source lost); destroy and recreate it. Maps to
+	 * XR_ERROR_STEREO_CAMERA_STREAM_ENDED_DXR.
+	 */
+	XRT_ERROR_STEREO_CAMERA_STREAM_ENDED = -48,
+} xrt_result_t;

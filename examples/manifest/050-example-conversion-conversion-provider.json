@@ -1,0 +1,15 @@
+{
+    "file_format_version": "1.0",
+    "plugin": {
+        "id":           "example-conversion",
+        "display_name": "Example Conversion Provider (template)",
+        "vendor":       "Example",
+        "version":      "0.1.0",
+        "binary_path":  "/absolute/path/to/DisplayXR-ExampleConversion.so",
+        "probe_order":  50,
+        "settings": {
+            "RAMP_DIRECTION": "vertical",
+            "WARM_MS":        "500"
+        }
+    }
+}

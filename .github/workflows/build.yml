@@ -1,0 +1,78 @@
+# Copyright 2026, The DisplayXR Project
+# SPDX-License-Identifier: BSL-1.0
+#
+# Build the provider and the fake host on Windows, Linux and macOS, run the
+# fake-host tests, and check the provider exports exactly one symbol.
+# Plain CMake; no dependency to install.
+
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DEXAMPLE_WERROR=ON
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Fake-host tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Exactly one export (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem build -Recurse -Filter 'DisplayXR-ExampleConversion.dll' | Select-Object -First 1
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -property installationPath
+          $dumpbin = Get-ChildItem "$vs\VC\Tools\MSVC" -Recurse -Filter dumpbin.exe |
+            Where-Object { $_.FullName -match 'Hostx64\\x64' } | Select-Object -First 1
+          $out = & $dumpbin.FullName /nologo /exports $dll.FullName
+          $names = $out | Select-String -Pattern '^\s+\d+\s+[0-9A-F]+\s+[0-9A-F]+\s+(\S+)' |
+            ForEach-Object { $_.Matches[0].Groups[1].Value }
+          Write-Host "exports: $($names -join ', ')"
+          if (@($names).Count -ne 1 -or $names -ne 'xrtConversionPluginNegotiate') {
+            Write-Error "expected exactly xrtConversionPluginNegotiate"
+          }
+
+      - name: Exactly one export (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          names=$(nm -D --defined-only build/DisplayXR-ExampleConversion.so | awk '$2 == "T" && $3 != "_init" && $3 != "_fini" { print $3 }')
+          echo "exports: $names"
+          test "$names" = "xrtConversionPluginNegotiate"
+
+      - name: Exactly one export (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          names=$(nm -gU build/DisplayXR-ExampleConversion.dylib | awk '$2 == "T" { print $3 }')
+          echo "exports: $names"
+          test "$names" = "_xrtConversionPluginNegotiate"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: provider-${{ matrix.os }}
+          path: |
+            build/**/DisplayXR-ExampleConversion.dll
+            build/**/DisplayXR-ExampleConversion.so
+            build/**/DisplayXR-ExampleConversion.dylib
+          if-no-files-found: error
